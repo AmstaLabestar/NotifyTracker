@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NotifTracker</string>
+    <string name="app_subtitle">Sauvegarde localement les notifications WhatsApp avant qu un message soit supprime.</string>
+    <string name="permission_request">Activer l acces aux notifications</string>
+    <string name="permission_granted">Acces aux notifications actif</string>
+    <string name="action_refresh">Rafraichir</string>
+    <string name="action_clear">Vider</string>
+    <string name="action_export">Exporter</string>
+    <string name="messages_cleared">Historique efface</string>
+    <string name="empty_state">Aucune capture pour le moment. Envoie un message WhatsApp de test puis supprime le pour verifier que la notification a bien ete sauvegardee.</string>
+    <string name="empty_filtered_state">Aucun resultat pour les filtres actuels.</string>
+    <string name="capture_count_zero">Captures enregistrees : 0</string>
+    <string name="capture_count">Captures enregistrees : %1$d</string>
+    <string name="deleted_capture_count_zero">Suppressions detectees : 0</string>
+    <string name="deleted_capture_count">Suppressions detectees : %1$d</string>
+    <string name="saved_before_deletion">Capture sauvegardee</string>
+    <string name="deletion_marker">Notification de suppression detectee</string>
+    <string name="search_hint">Rechercher un contact, groupe ou texte</string>
+    <string name="filter_deletion_only">Afficher uniquement les suppressions detectees</string>
+    <string name="nothing_to_export">Aucun message a exporter</string>
+    <string name="export_title">Historique NotifTracker</string>
+    <string name="export_subject">Export NotifTracker</string>
+    <string name="export_chooser">Partager l historique</string>
+    <string name="details_title">Details de la capture</string>
+    <string name="label_sender">Expediteur</string>
+    <string name="label_conversation">Conversation</string>
+    <string name="label_app">Application</string>
+    <string name="label_status">Statut</string>
+    <string name="label_time">Heure</string>
+    <string name="label_message">Message</string>
+</resources>
