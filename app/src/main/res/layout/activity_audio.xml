@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRefreshAudio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔄 Rafraîchir"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tvAudioEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aucun audio sauvegardé pour le moment.\nLes vocaux WhatsApp apparaîtront ici."
+        android:textAlignment="center"
+        android:padding="32dp"
+        android:visibility="gone"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/audioRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</LinearLayout>

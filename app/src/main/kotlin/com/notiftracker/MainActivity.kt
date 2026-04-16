@@ -1,14 +1,18 @@
 package com.notiftracker
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.Settings
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -76,16 +80,32 @@ class MainActivity : AppCompatActivity() {
             exportVisibleMessages()
         }
 
-        searchInput.doAfterTextChanged {
-            applyFilters()
-        }
+        searchInput.doAfterTextChanged { applyFilters() }
+        deletionOnlySwitch.setOnCheckedChangeListener { _, _ -> applyFilters() }
 
-        deletionOnlySwitch.setOnCheckedChangeListener { _, _ ->
-            applyFilters()
-        }
+        // Permission stockage pour l'audio
+        requestStoragePermission()
 
         checkPermission()
         loadMessages()
+        findViewById<MaterialButton>(R.id.btnAudios).setOnClickListener {
+    startActivity(Intent(this, AudioActivity::class.java))
+}
+    }
+
+    private fun requestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                startActivity(intent)
+            }
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                100
+            )
+        }
     }
 
     override fun onResume() {
@@ -108,8 +128,7 @@ class MainActivity : AppCompatActivity() {
     private fun isPermissionGranted(): Boolean {
         val componentName = ComponentName(this, NotificationService::class.java)
         val enabledListeners = Settings.Secure.getString(
-            contentResolver,
-            "enabled_notification_listeners"
+            contentResolver, "enabled_notification_listeners"
         )
         return enabledListeners?.contains(componentName.flattenToString()) == true
     }
@@ -128,12 +147,9 @@ class MainActivity : AppCompatActivity() {
         visibleMessages = allMessages.filter { message ->
             val matchesDeletion = !deletionOnly || message.isDeletionMarker
             val matchesQuery = query.isBlank() || listOf(
-                message.sender,
-                message.conversation,
-                message.content,
-                message.app
+                message.sender, message.conversation,
+                message.content, message.app
             ).any { it.contains(query, ignoreCase = true) }
-
             matchesDeletion && matchesQuery
         }
 
@@ -165,7 +181,6 @@ class MainActivity : AppCompatActivity() {
         val exportBody = buildString {
             appendLine(getString(R.string.export_title))
             appendLine()
-
             visibleMessages.forEach { message ->
                 appendLine("${getString(R.string.label_sender)}: ${message.sender}")
                 appendLine("${getString(R.string.label_conversation)}: ${message.conversation}")
@@ -182,7 +197,6 @@ class MainActivity : AppCompatActivity() {
             putExtra(Intent.EXTRA_SUBJECT, getString(R.string.export_subject))
             putExtra(Intent.EXTRA_TEXT, exportBody)
         }
-
         startActivity(Intent.createChooser(intent, getString(R.string.export_chooser)))
     }
 

@@ -13,11 +13,23 @@ import java.security.MessageDigest
 class NotificationService : NotificationListenerService() {
 
     private val scope = CoroutineScope(Dispatchers.IO)
+    private lateinit var audioObserver: AudioObserver
 
     private val trackedApps = mapOf(
         "com.whatsapp" to "WhatsApp",
         "com.whatsapp.w4b" to "WhatsApp Business"
     )
+
+    override fun onCreate() {
+        super.onCreate()
+        audioObserver = AudioObserver(applicationContext)
+        audioObserver.startWatching()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        audioObserver.stopWatching()
+    }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
@@ -97,26 +109,18 @@ class NotificationService : NotificationListenerService() {
         val sender = extractSender(lastMessage)
         val message = lastMessage?.getCharSequence("text")?.toString()?.trim().orEmpty()
         val conversation = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)
-            ?.toString()
-            ?.trim()
-            .orEmpty()
+            ?.toString()?.trim().orEmpty()
 
-        return MessagingStylePayload(
-            sender = sender,
-            conversation = conversation,
-            message = message
-        )
+        return MessagingStylePayload(sender = sender, conversation = conversation, message = message)
     }
 
     private fun extractSender(messageBundle: Bundle?): String {
         if (messageBundle == null) return ""
-
         val person = messageBundle.getParcelable("sender_person") as? Parcelable
         val personName = when (person) {
             is android.app.Person -> person.name?.toString().orEmpty()
             else -> ""
         }
-
         return listOf(
             personName,
             messageBundle.getCharSequence("sender")?.toString().orEmpty()
@@ -126,12 +130,9 @@ class NotificationService : NotificationListenerService() {
     private fun cleanupMessage(rawMessage: String): String {
         val trimmed = rawMessage.trim()
         val separatorIndex = trimmed.indexOf(": ")
-
         if (separatorIndex <= 0) return trimmed
-
         val prefix = trimmed.substring(0, separatorIndex)
         val suffix = trimmed.substring(separatorIndex + 2)
-
         return if (prefix.length in 1..60 && suffix.isNotBlank()) suffix.trim() else trimmed
     }
 
@@ -170,17 +171,13 @@ class NotificationService : NotificationListenerService() {
 
     companion object {
         private val ignoredExactMessages = setOf(
-            "Nouveau message",
-            "Nouveaux messages",
-            "New message",
-            "New messages"
+            "Nouveau message", "Nouveaux messages",
+            "New message", "New messages"
         )
-
         private val ignoredPrefixes = setOf(
             "Checking for new messages",
             "Recherche de nouveaux messages"
         )
-
         private val deletedMarkers = setOf(
             "This message was deleted",
             "Ce message a ete supprime",
