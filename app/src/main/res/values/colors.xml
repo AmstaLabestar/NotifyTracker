@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Palette de marque (teal, clin d'oeil a WhatsApp) - mode clair -->
+    <color name="brand_primary">#00796B</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+    <color name="brand_primary_container">#9EF2E3</color>
+    <color name="brand_on_primary_container">#00201B</color>
+    <color name="brand_secondary">#4A635E</color>
+
+    <!-- Palette de marque - mode sombre -->
+    <color name="brand_primary_dark">#54DBC6</color>
+    <color name="brand_on_primary_dark">#003730</color>
+    <color name="brand_primary_container_dark">#005046</color>
+    <color name="brand_on_primary_container_dark">#9EF2E3</color>
+    <color name="brand_secondary_dark">#B1CCC6</color>
+
+    <!-- Statut du diagnostic audio -->
     <color name="audio_status_ready_bg">#D8F3DC</color>
     <color name="audio_status_ready_text">#1B4332</color>
     <color name="audio_status_partial_bg">#FFF3CD</color>

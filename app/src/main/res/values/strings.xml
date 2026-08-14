@@ -53,6 +53,29 @@
     <string name="capture_service_text">Surveille les vocaux WhatsApp</string>
     <string name="audio_play_error">Erreur de lecture : %1$s</string>
     <string name="audio_item_default">Audio %1$d</string>
+
+    <!-- Navigation -->
+    <string name="nav_messages">Messages</string>
+    <string name="nav_media">Médias</string>
+    <string name="nav_settings">Réglages</string>
+
+    <!-- Écran médias -->
+    <string name="media_subtitle">Photos, vidéos et vocaux récupérés depuis WhatsApp.</string>
+    <string name="media_filter_all">Tout</string>
+    <string name="media_filter_photo">Photos</string>
+    <string name="media_filter_video">Vidéos</string>
+    <string name="media_filter_audio">Vocaux</string>
+    <string name="media_empty_state">Aucun média capturé pour le moment.\nPhotos, vidéos et vocaux WhatsApp apparaissent ici dès qu ils sont copiés.</string>
+    <string name="media_thumb_desc">Aperçu du média</string>
+    <string name="media_type_photo">Photo</string>
+    <string name="media_type_video">Vidéo</string>
+    <string name="media_type_audio">Vocal</string>
+    <string name="media_unknown_sender">Expéditeur inconnu</string>
+
+    <!-- Réglages -->
+    <string name="settings_access_title">Accès et permissions</string>
+    <string name="settings_storage_access">Accès aux fichiers WhatsApp</string>
+    <string name="settings_data_title">Données</string>
     <string name="audio_diagnostic_summary">Diagnostic audio : %1$s
 Acces notifications : %2$s
 Acces fichiers speciaux : %3$s

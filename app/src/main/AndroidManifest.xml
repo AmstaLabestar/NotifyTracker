@@ -40,10 +40,6 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <activity
-    android:name=".AudioActivity"
-    android:exported="false"/>
-
         <service
             android:name=".MediaCaptureService"
             android:exported="false"

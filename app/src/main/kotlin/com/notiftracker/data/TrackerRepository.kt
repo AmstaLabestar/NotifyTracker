@@ -19,6 +19,8 @@ class TrackerRepository private constructor(
 
     suspend fun insertMessage(message: Message) = messageDao.insert(message)
 
+    suspend fun allMessages(): List<Message> = messageDao.getAll()
+
     suspend fun clearMessages() = messageDao.deleteAll()
 
     suspend fun insertMedia(media: MediaEntity) = mediaDao.insert(media)

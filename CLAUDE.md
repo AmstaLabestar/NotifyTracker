@@ -48,14 +48,25 @@ app/src/main/kotlin/com/notiftracker/
 │   ├── MediaEntity.kt       # entité Room (audio/photo/vidéo) + enum MediaType
 │   ├── AppDatabase.kt       # Room v3 : MessageDao + MediaDao (Flow) + Converters
 │   └── TrackerRepository.kt # point d'accès unique, expose des Flow
+├── ui/                      # écrans (Phase 3, fragments)
+│   ├── MessagesFragment.kt  # onglet Messages : liste + recherche + filtre
+│   ├── MediaFragment.kt     # onglet Médias : filtres, plein écran photo/vidéo
+│   ├── MediaAdapter.kt      # vignettes Coil + lecteur audio inline
+│   └── SettingsFragment.kt  # onglet Réglages : permissions, diagnostic, export
 ├── NotificationService.kt   # NotificationListenerService : parse + insert via repo
 ├── MediaCaptureService.kt   # foreground service : héberge MediaObserver
 ├── MediaObserver.kt         # FileObserver compat + scan périodique → copie + MediaEntity
-├── MessageAdapter.kt        # liste des messages (MainActivity)
-├── MainActivity.kt          # écran principal : observe les messages via Flow
-├── AudioActivity.kt         # écran audios : observe mediaOfType(AUDIO), MediaPlayer
-└── res/                     # layouts, strings, colors, themes
+├── MessageAdapter.kt        # liste des messages (item_message)
+├── MainActivity.kt          # hôte : top bar + bottom navigation (3 onglets)
+└── res/                     # layouts, menu, drawable, values(-night)
 ```
+
+UI : `MainActivity` héberge une `BottomNavigationView` qui bascule entre trois
+fragments. Chaque fragment récupère `TrackerRepository` et observe ses `Flow`.
+Thème Material 3 (`Theme.NotifTracker`) avec palette teal ; dark mode via
+`values-night/themes.xml`. Vignettes photo/vidéo via **Coil** (`coil-video` pour
+extraire une frame). Lecture : audio inline (`MediaPlayer`), photo en dialog,
+vidéo en `VideoView`.
 
 Flux messages : `NotificationService.onNotificationPosted` → `extractPayload` →
 `Message` (empreinte SHA-256 anti-doublon) → `TrackerRepository.insertMessage`.

@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-    app:cardCornerRadius="22dp"
+    app:cardCornerRadius="20dp"
     app:cardElevation="0dp"
     app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">
@@ -16,17 +16,29 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="14dp">
+        android:padding="12dp">
 
-        <ImageButton
-            android:id="@+id/btnPlay"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:background="?attr/colorPrimaryContainer"
-            android:contentDescription="@string/audio_play"
-            android:padding="12dp"
-            android:src="@android:drawable/ic_media_play"
-            android:tint="?attr/colorOnPrimaryContainer" />
+        <FrameLayout
+            android:layout_width="60dp"
+            android:layout_height="60dp">
+
+            <ImageView
+                android:id="@+id/imgThumb"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/colorPrimaryContainer"
+                android:contentDescription="@string/media_thumb_desc"
+                android:scaleType="centerCrop" />
+
+            <ImageButton
+                android:id="@+id/btnPlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/audio_play"
+                android:src="@android:drawable/ic_media_play"
+                app:tint="?attr/colorOnPrimaryContainer" />
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -36,30 +48,30 @@
             android:orientation="vertical">
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvAudioName"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvMediaTitle"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textStyle="bold" />
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvAudioDate"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvMediaSubtitle"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvAudioSize"
+                android:id="@+id/tvMediaMeta"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="?attr/colorSurface"
-                android:paddingLeft="10dp"
-                android:paddingTop="4dp"
-                android:paddingRight="10dp"
-                android:paddingBottom="4dp"
-                android:textAppearance="?attr/textAppearanceLabelMedium" />
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorPrimary" />
         </LinearLayout>
     </LinearLayout>
 
