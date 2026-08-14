@@ -52,6 +52,7 @@
     <string name="capture_service_title">NotifTracker actif</string>
     <string name="capture_service_text">Surveille les vocaux WhatsApp</string>
     <string name="audio_play_error">Erreur de lecture : %1$s</string>
+    <string name="audio_item_default">Audio %1$d</string>
     <string name="audio_diagnostic_summary">Diagnostic audio : %1$s
 Acces notifications : %2$s
 Acces fichiers speciaux : %3$s

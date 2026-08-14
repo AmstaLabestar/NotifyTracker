@@ -3,7 +3,7 @@
 Plan de refonte complète. Mis à jour **à chaque étape** : cocher les cases,
 compléter le journal en bas. Voir [CLAUDE.md](CLAUDE.md) pour l'architecture et les conventions.
 
-**Statut global :** 🟢 Phases 0 & 1 OK + release auto → prochaine : Phase 2 (photos + suppression)
+**Statut global :** 🟢 Phases 0-2 OK + release auto → prochaine : Phase 3 (refonte UI/UX + écran médias)
 **Dernière mise à jour :** 2026-08-14
 
 **Livraison continue :** chaque push met à jour la release GitHub « latest ».
@@ -78,12 +78,14 @@ Objectif : que l'audio se copie ET se lise, sans crash, sur tout minSdk 26+.
 - [x] Build `assembleDebug` OK
 - [ ] Peupler `media` en base (repoussé en Phase 2, avec la capture photo + corrélation)
 
-## Phase 2 — Capture améliorée
+## Phase 2 — Capture améliorée  ✅
 
-- [ ] `onNotificationRemoved` → vraie détection de suppression / disparition
-- [ ] Corréler médias ↔ conversation (par fenêtre temporelle avec les notifs)
-- [ ] Capture **photo** : observer `WhatsApp Images` / `WhatsApp Video` (mêmes limites : ne marche que si l'auto-téléchargement WhatsApp est actif)
-- [ ] Copier les médias dans Room + dossier privé avec métadonnées
+- [x] Capture **photo + vidéo** : `MediaObserver` observe `WhatsApp Images` / `WhatsApp Video` (+ vocaux), pour WhatsApp et WhatsApp Business. Limite connue : ne marche que si l'auto-téléchargement WhatsApp est actif (sinon le fichier n'atterrit jamais sur le disque).
+- [x] Médias enregistrés dans Room (`MediaEntity`) + dossier privé `captured_media/<type>/`, avec métadonnées (type, taille, horodatage, nom source).
+- [x] Corrélation média ↔ conversation par fenêtre temporelle (±120 s) avec les notifications (`findNearest`) → renseigne `conversation` / `sender` / `linkedMessageId`.
+- [x] `AudioActivity` lit désormais depuis la base (`mediaOfType(AUDIO)`), affiche l'expéditeur corrélé et lit depuis `localPath`.
+- [x] Build `assembleDebug` OK
+- [~] `onNotificationRemoved` : **écarté après analyse**. La disparition d'une notif WhatsApp est ambiguë (lecture du chat ≈ suppression, même code `reason`) → trop de faux positifs. La détection fiable reste le marqueur texte « Ce message a été supprimé » déjà capté par `onNotificationPosted`. Surtout : le modèle « on sauvegarde tout à l'arrivée » préserve déjà le contenu même si le message est effacé ensuite, donc détecter la suppression n'est pas nécessaire pour l'objectif.
 
 ## Phase 3 — Refonte UI / UX
 
@@ -109,5 +111,6 @@ Objectif : que l'audio se copie ET se lise, sans crash, sur tout minSdk 26+.
 
 - 2026-08-14 · Init · Création de `PLAN.md` et `CLAUDE.md`, audit complet du code existant.
 - 2026-08-14 · CI · Release APK automatique. Correctif clé : `gradlew` n'avait pas le bit exécutable (`git update-index --chmod=+x`) → la CI échouait sur Linux (exit 126) depuis toujours. Workflow étendu : build + upload artifact + release « latest » avec APK. `build_cli/` ajouté au `.gitignore`. Release vérifiée (HTTP 200).
+- 2026-08-14 · Phase 2 · Capture multi-médias. `AudioObserver` → `MediaObserver` (audio + photo + vidéo, WhatsApp + Business), copie dans `captured_media/<type>/` + insertion `MediaEntity` en base avec corrélation conversation (±120 s, `findNearest`). `AudioActivity`/`AudioAdapter` réécrits sur la base (`mediaOfType(AUDIO)`, lecture depuis `localPath`, expéditeur affiché). `MediaCaptureService`/`MainActivity` mis à jour. `onNotificationRemoved` écarté (ambigu, documenté). Build OK.
 - 2026-08-14 · Phase 1 · Couche données unifiée. Nouveau package `com.notiftracker.data` : `Message` (déplacé), `MediaEntity` + `MediaType`, `AppDatabase` v3 (Message + Media, DAO en `Flow`, `Converters`), `TrackerRepository`. Suppression de `MessageDatabase.kt` et `Message.kt` (racine). `MainActivity` observe les messages via `Flow` + `repeatOnLifecycle` (plus de reload manuel) ; `NotificationService` et `MessageAdapter` mis à jour. Build OK.
 - 2026-08-14 · Phase 0 · Fiabilisation capture + lecture audio. Fichiers : `AudioObserver.kt` (réécrit : compat FileObserver + scan périodique + dédup, sans `Thread.sleep`), `MediaCaptureService.kt` (nouveau foreground service), `NotificationService.kt` (démarre le service), `MainActivity.kt` (démarre le service + permission notifications), `AudioActivity.kt` (error listener + release onPause), `AndroidManifest.xml` (service + permissions FGS/notifications), `strings.xml` (libellés service + erreur). Build `assembleDebug` validé.

@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var deletionOnlySwitch: MaterialSwitch
     private lateinit var adapter: MessageAdapter
     private lateinit var repository: TrackerRepository
-    private lateinit var audioObserver: AudioObserver
+    private lateinit var mediaObserver: MediaObserver
 
     private var allMessages: List<Message> = emptyList()
     private var visibleMessages: List<Message> = emptyList()
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         searchInput = findViewById(R.id.etSearch)
         deletionOnlySwitch = findViewById(R.id.switchDeletionOnly)
         adapter = MessageAdapter(::showMessageDetails)
-        audioObserver = AudioObserver(this)
+        mediaObserver = MediaObserver(this)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
@@ -180,8 +180,8 @@ class MainActivity : AppCompatActivity() {
         } else {
             true
         }
-        val hasWhatsappFolder = audioObserver.isSourceDirectoryAvailable()
-        val savedAudioCount = audioObserver.getSavedAudios().size
+        val hasWhatsappFolder = mediaObserver.isSourceDirectoryAvailable()
+        val savedAudioCount = mediaObserver.getSavedMediaCount()
 
         val notificationAccess = if (hasNotificationAccess) {
             getString(R.string.diagnostic_ok)
@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity() {
             storageAccess,
             whatsappFolderStatus,
             savedAudioCount,
-            audioObserver.getSourceDirectoryPath()
+            mediaObserver.getSourceDirectoryPath()
         )
         audioStatusView.backgroundTintList =
             ColorStateList.valueOf(getColor(status.backgroundColorRes))

@@ -49,22 +49,27 @@ app/src/main/kotlin/com/notiftracker/
 │   ├── AppDatabase.kt       # Room v3 : MessageDao + MediaDao (Flow) + Converters
 │   └── TrackerRepository.kt # point d'accès unique, expose des Flow
 ├── NotificationService.kt   # NotificationListenerService : parse + insert via repo
-├── MediaCaptureService.kt   # foreground service : héberge AudioObserver (Phase 0)
-├── AudioObserver.kt         # FileObserver compat + scan périodique → copie privée
+├── MediaCaptureService.kt   # foreground service : héberge MediaObserver
+├── MediaObserver.kt         # FileObserver compat + scan périodique → copie + MediaEntity
 ├── MessageAdapter.kt        # liste des messages (MainActivity)
 ├── MainActivity.kt          # écran principal : observe les messages via Flow
-├── AudioActivity.kt         # écran audios + AudioAdapter (MediaPlayer)
+├── AudioActivity.kt         # écran audios : observe mediaOfType(AUDIO), MediaPlayer
 └── res/                     # layouts, strings, colors, themes
 ```
 
-Flux : `NotificationService` reçoit `onNotificationPosted` → `extractPayload` →
+Flux messages : `NotificationService.onNotificationPosted` → `extractPayload` →
 `Message` (empreinte SHA-256 anti-doublon) → `TrackerRepository.insertMessage`.
 `MainActivity` observe `repository.messages` (Flow) et se met à jour toute seule.
-En parallèle `MediaCaptureService` (foreground) fait tourner `AudioObserver` qui
-copie les vocaux WhatsApp dans le dossier privé de l'app.
 
-> Table `media` créée mais pas encore peuplée : la capture/corrélation arrive en Phase 2.
-> `AudioActivity` lit encore les fichiers depuis le disque (`getSavedAudios`).
+Flux médias : `MediaCaptureService` (foreground) fait tourner `MediaObserver`, qui
+surveille les dossiers WhatsApp (Voice Notes, Audio, Images, Video ; WhatsApp +
+Business), copie chaque nouveau fichier dans `captured_media/<type>/` et insère une
+`MediaEntity` en base — en corrélant à la conversation via le message le plus proche
+dans le temps (`findNearest`, ±120 s). `AudioActivity` observe `mediaOfType(AUDIO)`.
+
+> Photos/vidéos sont capturées en base mais pas encore affichées : l'écran médias
+> (vignettes, lecteur inline) arrive en Phase 3 (refonte UI).
+> Rappel : la capture de fichiers dépend de l'auto-téléchargement WhatsApp.
 
 ## 5. Conventions
 

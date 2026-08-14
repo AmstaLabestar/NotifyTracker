@@ -23,6 +23,10 @@ class TrackerRepository private constructor(
 
     suspend fun insertMedia(media: MediaEntity) = mediaDao.insert(media)
 
+    /** Message le plus proche d'un horodatage (± [windowMs] ms), pour relier un media à une conversation. */
+    suspend fun nearestMessage(timestamp: Long, windowMs: Long): Message? =
+        messageDao.findNearest(timestamp, timestamp - windowMs, timestamp + windowMs)
+
     companion object {
         @Volatile
         private var INSTANCE: TrackerRepository? = null

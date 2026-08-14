@@ -9,9 +9,15 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.button.MaterialButton
+import com.notiftracker.data.MediaEntity
+import com.notiftracker.data.MediaType
+import com.notiftracker.data.TrackerRepository
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -22,16 +28,16 @@ class AudioActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyState: TextView
     private lateinit var adapter: AudioAdapter
-    private lateinit var audioObserver: AudioObserver
+    private lateinit var repository: TrackerRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
 
-        supportActionBar?.title = "Audios sauvegardés"
+        supportActionBar?.title = getString(R.string.audio_library_title)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        audioObserver = AudioObserver(this)
+        repository = TrackerRepository.get(this)
 
         recyclerView = findViewById(R.id.audioRecyclerView)
         emptyState = findViewById(R.id.tvAudioEmpty)
@@ -40,23 +46,16 @@ class AudioActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        findViewById<MaterialButton>(R.id.btnRefreshAudio).setOnClickListener {
-            loadAudios()
-        }
-
-        loadAudios()
-    }
-
-    private fun loadAudios() {
-        val files = audioObserver.getSavedAudios()
-
-        if (files.isEmpty()) {
-            recyclerView.visibility = View.GONE
-            emptyState.visibility = View.VISIBLE
-        } else {
-            recyclerView.visibility = View.VISIBLE
-            emptyState.visibility = View.GONE
-            adapter.submitList(files)
+        // La liste se met a jour automatiquement (Flow).
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.mediaOfType(MediaType.AUDIO).collect { audios ->
+                    adapter.submitList(audios)
+                    val empty = audios.isEmpty()
+                    recyclerView.visibility = if (empty) View.GONE else View.VISIBLE
+                    emptyState.visibility = if (empty) View.VISIBLE else View.GONE
+                }
+            }
         }
     }
 
@@ -67,7 +66,6 @@ class AudioActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Libere le lecteur quand l'ecran passe en arriere-plan (evite les fuites).
         adapter.releasePlayer()
     }
 
@@ -79,18 +77,19 @@ class AudioActivity : AppCompatActivity() {
 
 class AudioAdapter : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
 
-    private var files = listOf<File>()
+    private var items = listOf<MediaEntity>()
     private var mediaPlayer: MediaPlayer? = null
     private var currentPlayingPosition = -1
 
-    fun submitList(list: List<File>) {
-        files = list
+    fun submitList(list: List<MediaEntity>) {
+        items = list
         notifyDataSetChanged()
     }
 
     fun releasePlayer() {
         mediaPlayer?.release()
         mediaPlayer = null
+        currentPlayingPosition = -1
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -100,10 +99,10 @@ class AudioAdapter : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(files[position], position)
+        holder.bind(items[position], position)
     }
 
-    override fun getItemCount() = files.size
+    override fun getItemCount() = items.size
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val tvName: TextView = view.findViewById(R.id.tvAudioName)
@@ -111,11 +110,16 @@ class AudioAdapter : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
         private val tvSize: TextView = view.findViewById(R.id.tvAudioSize)
         private val btnPlay: ImageButton = view.findViewById(R.id.btnPlay)
 
-        fun bind(file: File, position: Int) {
+        fun bind(item: MediaEntity, position: Int) {
             val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-            tvName.text = "🎤 Audio ${position + 1}"
-            tvDate.text = sdf.format(Date(file.lastModified()))
-            tvSize.text = formatSize(file.length())
+            val label = item.sender ?: item.conversation
+            tvName.text = if (label.isNullOrBlank()) {
+                "🎤 " + btnPlay.context.getString(R.string.audio_item_default, position + 1)
+            } else {
+                "🎤 $label"
+            }
+            tvDate.text = sdf.format(Date(item.timestamp))
+            tvSize.text = formatSize(item.sizeBytes)
 
             val isPlaying = currentPlayingPosition == position
             btnPlay.setImageResource(
@@ -124,30 +128,23 @@ class AudioAdapter : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
             )
 
             btnPlay.setOnClickListener {
-                if (isPlaying) {
-                    stopAudio()
-                } else {
-                    playAudio(file, position)
-                }
+                if (isPlaying) stopAudio() else playAudio(item, position)
             }
         }
 
-        private fun playAudio(file: File, position: Int) {
+        private fun playAudio(item: MediaEntity, position: Int) {
             try {
-                // Arrêter l'audio en cours
                 mediaPlayer?.stop()
                 mediaPlayer?.release()
                 mediaPlayer = null
 
                 val previousPosition = currentPlayingPosition
                 currentPlayingPosition = position
-
-                // Notifier les changements visuels
                 notifyItemChanged(previousPosition)
                 notifyItemChanged(position)
 
                 mediaPlayer = MediaPlayer().apply {
-                    setDataSource(file.absolutePath)
+                    setDataSource(File(item.localPath).absolutePath)
                     setOnCompletionListener {
                         currentPlayingPosition = -1
                         notifyItemChanged(position)
@@ -165,7 +162,6 @@ class AudioAdapter : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
                     prepare()
                     start()
                 }
-
             } catch (e: Exception) {
                 currentPlayingPosition = -1
                 notifyItemChanged(position)

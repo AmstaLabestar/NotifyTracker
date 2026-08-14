@@ -21,13 +21,13 @@ import androidx.core.app.NotificationCompat
  */
 class MediaCaptureService : Service() {
 
-    private lateinit var audioObserver: AudioObserver
+    private lateinit var mediaObserver: MediaObserver
 
     override fun onCreate() {
         super.onCreate()
-        audioObserver = AudioObserver(applicationContext)
+        mediaObserver = MediaObserver(applicationContext)
         startForegroundNotification()
-        audioObserver.start()
+        mediaObserver.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -37,7 +37,7 @@ class MediaCaptureService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        audioObserver.stop()
+        mediaObserver.stop()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

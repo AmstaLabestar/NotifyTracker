@@ -24,6 +24,13 @@ interface MessageDao {
     @Query("SELECT * FROM messages ORDER BY timestamp DESC")
     suspend fun getAll(): List<Message>
 
+    /** Message dont l'horodatage est le plus proche de :ref, dans la fenetre [:from, :to]. */
+    @Query(
+        "SELECT * FROM messages WHERE timestamp BETWEEN :from AND :to " +
+            "ORDER BY ABS(timestamp - :ref) LIMIT 1"
+    )
+    suspend fun findNearest(ref: Long, from: Long, to: Long): Message?
+
     @Query("DELETE FROM messages")
     suspend fun deleteAll()
 }
