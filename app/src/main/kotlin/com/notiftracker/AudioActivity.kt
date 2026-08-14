@@ -65,6 +65,12 @@ class AudioActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onPause() {
+        super.onPause()
+        // Libere le lecteur quand l'ecran passe en arriere-plan (evite les fuites).
+        adapter.releasePlayer()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         adapter.releasePlayer()
@@ -142,18 +148,30 @@ class AudioAdapter : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
 
                 mediaPlayer = MediaPlayer().apply {
                     setDataSource(file.absolutePath)
-                    prepare()
-                    start()
                     setOnCompletionListener {
                         currentPlayingPosition = -1
                         notifyItemChanged(position)
                     }
+                    setOnErrorListener { _, what, extra ->
+                        currentPlayingPosition = -1
+                        notifyItemChanged(position)
+                        Toast.makeText(
+                            btnPlay.context,
+                            btnPlay.context.getString(R.string.audio_play_error, "$what/$extra"),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        true
+                    }
+                    prepare()
+                    start()
                 }
 
             } catch (e: Exception) {
+                currentPlayingPosition = -1
+                notifyItemChanged(position)
                 Toast.makeText(
                     btnPlay.context,
-                    "Erreur lecture : ${e.message}",
+                    btnPlay.context.getString(R.string.audio_play_error, e.message ?: ""),
                     Toast.LENGTH_SHORT
                 ).show()
             }

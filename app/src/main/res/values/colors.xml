@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="audio_status_ready_bg">#D8F3DC</color>
+    <color name="audio_status_ready_text">#1B4332</color>
+    <color name="audio_status_partial_bg">#FFF3CD</color>
+    <color name="audio_status_partial_text">#7A4F01</color>
+    <color name="audio_status_blocked_bg">#F8D7DA</color>
+    <color name="audio_status_blocked_text">#7F1D1D</color>
+</resources>

@@ -2,11 +2,23 @@
 <resources>
     <string name="app_name">NotifTracker</string>
     <string name="app_subtitle">Sauvegarde localement les notifications WhatsApp avant qu un message soit supprime.</string>
+    <string name="summary_messages_title">Messages sauves</string>
+    <string name="summary_deleted_title">Suppressions</string>
     <string name="permission_request">Activer l acces aux notifications</string>
     <string name="permission_granted">Acces aux notifications actif</string>
+    <string name="action_open_audio">Ouvrir les audios</string>
     <string name="action_refresh">Rafraichir</string>
     <string name="action_clear">Vider</string>
     <string name="action_export">Exporter</string>
+    <string name="filters_title">Recherche et filtres</string>
+    <string name="audio_panel_title">Lecture audio</string>
+    <string name="audio_panel_subtitle">Consulte les vocaux copies et verifie rapidement si la capture audio est prete.</string>
+    <string name="audio_library_title">Bibliotheque audio</string>
+    <string name="audio_library_subtitle">Lis les vocaux recuperes depuis WhatsApp et garde un oeil sur les plus recents.</string>
+    <string name="action_refresh_audio">Rafraichir les audios</string>
+    <string name="audio_empty_state">Aucun audio sauvegarde pour le moment.\nLes vocaux WhatsApp apparaissent ici des qu ils sont copies.</string>
+    <string name="audio_play">Lire ou mettre en pause l audio</string>
+    <string name="messages_section_title">Messages captures</string>
     <string name="messages_cleared">Historique efface</string>
     <string name="empty_state">Aucune capture pour le moment. Envoie un message WhatsApp de test puis supprime le pour verifier que la notification a bien ete sauvegardee.</string>
     <string name="empty_filtered_state">Aucun resultat pour les filtres actuels.</string>
@@ -29,4 +41,21 @@
     <string name="label_status">Statut</string>
     <string name="label_time">Heure</string>
     <string name="label_message">Message</string>
+    <string name="audio_diagnostic_placeholder">Diagnostic audio en cours...</string>
+    <string name="diagnostic_ok">OK</string>
+    <string name="diagnostic_missing">Manquant</string>
+    <string name="diagnostic_legacy_storage">Selon permission classique</string>
+    <string name="audio_status_ready">Audio pret</string>
+    <string name="audio_status_partial">Audio partiel</string>
+    <string name="audio_status_blocked">Audio bloque</string>
+    <string name="capture_service_channel">Capture en arriere-plan</string>
+    <string name="capture_service_title">NotifTracker actif</string>
+    <string name="capture_service_text">Surveille les vocaux WhatsApp</string>
+    <string name="audio_play_error">Erreur de lecture : %1$s</string>
+    <string name="audio_diagnostic_summary">Diagnostic audio : %1$s
+Acces notifications : %2$s
+Acces fichiers speciaux : %3$s
+Dossier WhatsApp detecte : %4$s
+Audios copies : %5$d
+Chemin surveille : %6$s</string>
 </resources>

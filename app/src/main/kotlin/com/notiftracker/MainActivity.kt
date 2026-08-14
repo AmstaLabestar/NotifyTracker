@@ -3,6 +3,7 @@ package com.notiftracker
 import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -31,10 +32,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var emptyState: TextView
     private lateinit var countView: TextView
     private lateinit var deletedCountView: TextView
+    private lateinit var audioStatusView: TextView
     private lateinit var searchInput: TextInputEditText
     private lateinit var deletionOnlySwitch: MaterialSwitch
     private lateinit var adapter: MessageAdapter
     private lateinit var db: MessageDatabase
+    private lateinit var audioObserver: AudioObserver
 
     private var allMessages: List<Message> = emptyList()
     private var visibleMessages: List<Message> = emptyList()
@@ -49,9 +52,11 @@ class MainActivity : AppCompatActivity() {
         emptyState = findViewById(R.id.tvEmptyState)
         countView = findViewById(R.id.tvCount)
         deletedCountView = findViewById(R.id.tvDeletedCount)
+        audioStatusView = findViewById(R.id.tvAudioStatus)
         searchInput = findViewById(R.id.etSearch)
         deletionOnlySwitch = findViewById(R.id.switchDeletionOnly)
         adapter = MessageAdapter(::showMessageDetails)
+        audioObserver = AudioObserver(this)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
@@ -85,8 +90,13 @@ class MainActivity : AppCompatActivity() {
 
         // Permission stockage pour l'audio
         requestStoragePermission()
+        requestNotificationsPermission()
+
+        // Demarre la capture des vocaux (foreground service) des l'ouverture.
+        MediaCaptureService.start(this)
 
         checkPermission()
+        updateAudioDiagnostic()
         loadMessages()
         findViewById<MaterialButton>(R.id.btnAudios).setOnClickListener {
     startActivity(Intent(this, AudioActivity::class.java))
@@ -108,9 +118,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestNotificationsPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         checkPermission()
+        updateAudioDiagnostic()
         loadMessages()
     }
 
@@ -131,6 +157,80 @@ class MainActivity : AppCompatActivity() {
             contentResolver, "enabled_notification_listeners"
         )
         return enabledListeners?.contains(componentName.flattenToString()) == true
+    }
+
+    private fun updateAudioDiagnostic() {
+        val hasNotificationAccess = isPermissionGranted()
+        val hasStorageAccess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            true
+        }
+        val hasWhatsappFolder = audioObserver.isSourceDirectoryAvailable()
+        val savedAudioCount = audioObserver.getSavedAudios().size
+
+        val notificationAccess = if (hasNotificationAccess) {
+            getString(R.string.diagnostic_ok)
+        } else {
+            getString(R.string.diagnostic_missing)
+        }
+
+        val storageAccess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (hasStorageAccess) {
+                getString(R.string.diagnostic_ok)
+            } else {
+                getString(R.string.diagnostic_missing)
+            }
+        } else {
+            getString(R.string.diagnostic_legacy_storage)
+        }
+
+        val whatsappFolderStatus = if (hasWhatsappFolder) {
+            getString(R.string.diagnostic_ok)
+        } else {
+            getString(R.string.diagnostic_missing)
+        }
+
+        val status = when {
+            hasNotificationAccess && hasStorageAccess && hasWhatsappFolder -> DiagnosticStatus.READY
+            hasWhatsappFolder || savedAudioCount > 0 -> DiagnosticStatus.PARTIAL
+            else -> DiagnosticStatus.BLOCKED
+        }
+
+        audioStatusView.text = getString(
+            R.string.audio_diagnostic_summary,
+            getString(status.titleRes),
+            notificationAccess,
+            storageAccess,
+            whatsappFolderStatus,
+            savedAudioCount,
+            audioObserver.getSourceDirectoryPath()
+        )
+        audioStatusView.backgroundTintList =
+            ColorStateList.valueOf(getColor(status.backgroundColorRes))
+        audioStatusView.setTextColor(getColor(status.textColorRes))
+    }
+
+    private enum class DiagnosticStatus(
+        val titleRes: Int,
+        val backgroundColorRes: Int,
+        val textColorRes: Int
+    ) {
+        READY(
+            R.string.audio_status_ready,
+            R.color.audio_status_ready_bg,
+            R.color.audio_status_ready_text
+        ),
+        PARTIAL(
+            R.string.audio_status_partial,
+            R.color.audio_status_partial_bg,
+            R.color.audio_status_partial_text
+        ),
+        BLOCKED(
+            R.string.audio_status_blocked,
+            R.color.audio_status_blocked_bg,
+            R.color.audio_status_blocked_text
+        )
     }
 
     private fun loadMessages() {

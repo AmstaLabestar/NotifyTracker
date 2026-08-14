@@ -13,7 +13,6 @@ import java.security.MessageDigest
 class NotificationService : NotificationListenerService() {
 
     private val scope = CoroutineScope(Dispatchers.IO)
-    private lateinit var audioObserver: AudioObserver
 
     private val trackedApps = mapOf(
         "com.whatsapp" to "WhatsApp",
@@ -22,13 +21,8 @@ class NotificationService : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
-        audioObserver = AudioObserver(applicationContext)
-        audioObserver.startWatching()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        audioObserver.stopWatching()
+        // La surveillance des vocaux vit dans un foreground service dedie (fiabilite).
+        MediaCaptureService.start(applicationContext)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
