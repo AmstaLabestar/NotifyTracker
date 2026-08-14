@@ -25,3 +25,7 @@ out/
 keystore.properties
 *.jks
 *.keystore
+
+# build CLI local (contournement verrou R.jar)
+build_cli/
+*/build_cli/
