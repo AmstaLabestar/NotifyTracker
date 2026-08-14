@@ -39,23 +39,32 @@ App Android qui écoute les notifications WhatsApp (et WhatsApp Business) afin d
 
 > Windows : utiliser `gradlew.bat`. Le wrapper est versionné à la racine.
 
-## 4. Architecture actuelle (avant refacto)
+## 4. Architecture actuelle
 
 ```
 app/src/main/kotlin/com/notiftracker/
-├── NotificationService.kt   # NotificationListenerService : parse + insert Room
-├── AudioObserver.kt         # FileObserver sur les dossiers vocaux WhatsApp → copie privée
-├── MessageDatabase.kt       # Room DAO + DB (entité Message, version 2)
-├── Message.kt               # entité Room
+├── data/                    # couche données (Phase 1)
+│   ├── Message.kt           # entité Room (messages)
+│   ├── MediaEntity.kt       # entité Room (audio/photo/vidéo) + enum MediaType
+│   ├── AppDatabase.kt       # Room v3 : MessageDao + MediaDao (Flow) + Converters
+│   └── TrackerRepository.kt # point d'accès unique, expose des Flow
+├── NotificationService.kt   # NotificationListenerService : parse + insert via repo
+├── MediaCaptureService.kt   # foreground service : héberge AudioObserver (Phase 0)
+├── AudioObserver.kt         # FileObserver compat + scan périodique → copie privée
 ├── MessageAdapter.kt        # liste des messages (MainActivity)
-├── MainActivity.kt          # écran principal : liste, filtres, diagnostic, export
+├── MainActivity.kt          # écran principal : observe les messages via Flow
 ├── AudioActivity.kt         # écran audios + AudioAdapter (MediaPlayer)
 └── res/                     # layouts, strings, colors, themes
 ```
 
 Flux : `NotificationService` reçoit `onNotificationPosted` → `extractPayload` →
-`Message` (empreinte SHA-256 anti-doublon) → Room. En parallèle `AudioObserver`
-(démarré dans `NotificationService.onCreate`) copie les vocaux.
+`Message` (empreinte SHA-256 anti-doublon) → `TrackerRepository.insertMessage`.
+`MainActivity` observe `repository.messages` (Flow) et se met à jour toute seule.
+En parallèle `MediaCaptureService` (foreground) fait tourner `AudioObserver` qui
+copie les vocaux WhatsApp dans le dossier privé de l'app.
+
+> Table `media` créée mais pas encore peuplée : la capture/corrélation arrive en Phase 2.
+> `AudioActivity` lit encore les fichiers depuis le disque (`getSavedAudios`).
 
 ## 5. Conventions
 

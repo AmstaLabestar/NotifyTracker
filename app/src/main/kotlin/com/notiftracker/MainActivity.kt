@@ -15,12 +15,16 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
+import com.notiftracker.data.Message
+import com.notiftracker.data.TrackerRepository
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchInput: TextInputEditText
     private lateinit var deletionOnlySwitch: MaterialSwitch
     private lateinit var adapter: MessageAdapter
-    private lateinit var db: MessageDatabase
+    private lateinit var repository: TrackerRepository
     private lateinit var audioObserver: AudioObserver
 
     private var allMessages: List<Message> = emptyList()
@@ -46,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        db = MessageDatabase.getDatabase(this)
+        repository = TrackerRepository.get(this)
 
         recyclerView = findViewById(R.id.recyclerView)
         emptyState = findViewById(R.id.tvEmptyState)
@@ -66,13 +70,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<MaterialButton>(R.id.btnRefresh).setOnClickListener {
-            loadMessages()
+            // La liste se met a jour toute seule (Flow) ; on rafraichit le diagnostic.
+            updateAudioDiagnostic()
+            applyFilters()
         }
 
         findViewById<MaterialButton>(R.id.btnClear).setOnClickListener {
             lifecycleScope.launch {
-                db.messageDao().deleteAll()
-                loadMessages()
+                repository.clearMessages()
                 Toast.makeText(
                     this@MainActivity,
                     getString(R.string.messages_cleared),
@@ -97,10 +102,20 @@ class MainActivity : AppCompatActivity() {
 
         checkPermission()
         updateAudioDiagnostic()
-        loadMessages()
+
         findViewById<MaterialButton>(R.id.btnAudios).setOnClickListener {
-    startActivity(Intent(this, AudioActivity::class.java))
-}
+            startActivity(Intent(this, AudioActivity::class.java))
+        }
+
+        // Observe les messages en continu : l'UI se met a jour a chaque capture.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.messages.collect { messages ->
+                    allMessages = messages
+                    applyFilters()
+                }
+            }
+        }
     }
 
     private fun requestStoragePermission() {
@@ -137,7 +152,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         checkPermission()
         updateAudioDiagnostic()
-        loadMessages()
     }
 
     private fun checkPermission() {
@@ -231,13 +245,6 @@ class MainActivity : AppCompatActivity() {
             R.color.audio_status_blocked_bg,
             R.color.audio_status_blocked_text
         )
-    }
-
-    private fun loadMessages() {
-        lifecycleScope.launch {
-            allMessages = db.messageDao().getAll()
-            applyFilters()
-        }
     }
 
     private fun applyFilters() {

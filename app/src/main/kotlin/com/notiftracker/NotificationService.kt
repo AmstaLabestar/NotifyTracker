@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.notiftracker.data.Message
+import com.notiftracker.data.TrackerRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,9 +52,7 @@ class NotificationService : NotificationListenerService() {
         )
 
         scope.launch {
-            MessageDatabase.getDatabase(applicationContext)
-                .messageDao()
-                .insert(message)
+            TrackerRepository.get(applicationContext).insertMessage(message)
         }
     }
 

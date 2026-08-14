@@ -1,4 +1,4 @@
-package com.notiftracker
+package com.notiftracker.data
 
 import androidx.room.Entity
 import androidx.room.Index
